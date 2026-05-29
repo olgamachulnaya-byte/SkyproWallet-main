@@ -31,6 +31,7 @@ function Analysis() {
             <S.CalendarHeader>
               <S.CalendarHeaderTitle>Период</S.CalendarHeaderTitle>
             </S.CalendarHeader>
+            
             <S.CalendarWeekDays>
               {daysOfWeek.map((day) => (
                 <S.CalendarWeekDayBlock key={day}>
