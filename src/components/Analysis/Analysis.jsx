@@ -30,15 +30,8 @@ function Analysis() {
           <S.CalendarHeaderContainer>
             <S.CalendarHeader>
               <S.CalendarHeaderTitle>Период</S.CalendarHeaderTitle>
-              <S.CalendarFilterLinks>
-                <S.CalendarNavLink type="button" $active>
-                  День
-                </S.CalendarNavLink>
-                <S.CalendarNavLink type="button" $active={false}>
-                  Месяц
-                </S.CalendarNavLink>
-              </S.CalendarFilterLinks>
             </S.CalendarHeader>
+            
             <S.CalendarWeekDays>
               {daysOfWeek.map((day) => (
                 <S.CalendarWeekDayBlock key={day}>
