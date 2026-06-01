@@ -38,7 +38,7 @@ export const Row = styled.div`
   color: ${({ $isSelected }) => getSelectedColor($isSelected)};
   background: ${({ $isSelected }) => ($isSelected ? "#F1EBFD" : "transparent")};
   ${getTextStyles()}
-  cursor: default;
+  cursor: pointer;
   outline: none;
 
   @media (max-width: 760px) {
@@ -67,16 +67,12 @@ export const IconButton = styled.button`
   margin: 0;
   border: none;
   background: transparent;
-  cursor: default;
+  cursor: pointer;
   opacity: 0.45;
   filter: ${({ $isSelected }) =>
     $isSelected
       ? "brightness(0) saturate(100%) invert(27%) sepia(88%) saturate(3021%) hue-rotate(252deg) brightness(95%) contrast(95%)"
       : "none"};
-
-  &:disabled {
-    cursor: default;
-  }
 
   img {
     width: 12px;
