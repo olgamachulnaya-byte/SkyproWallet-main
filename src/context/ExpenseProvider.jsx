@@ -44,43 +44,49 @@ export const ExpenseProvider = ({ children }) => {
   }, [getExpenses]);
 
   const addNewExpense = async ({ expense }) => {
-    try {
-      await postExpense({ token, expense });
-      await getExpenses();
-      toast.success("Новый расход добавлен");
-    } catch (requestError) {
-      const message = requestError.message || textErrors.addExpenseError;
-      setError(message);
-      toast.error(message);
-      throw requestError;
-    }
-  };
+  try {
+    await postExpense({ token, expense });
 
-  const editExpense = async ({ id, expense }) => {
-    try {
-      await patchExpense({ token, id, expense });
-      await getExpenses();
-      toast.success("Расход обновлён");
-    } catch (requestError) {
-      const message = requestError.message || textErrors.updateExpenseError;
-      setError(message);
-      toast.error(message);
-      throw requestError;
-    }
-  };
+    await getExpenses();
 
-  const deleteExpenseByID = async ({ id }) => {
-    try {
-      await deleteExpense({ token, id });
-      await getExpenses();
-      toast.success("Расход удалён");
-    } catch (requestError) {
-      const message = requestError.message || textErrors.deleteExpenseError;
-      setError(message);
-      toast.error(message);
-      throw requestError;
-    }
-  };
+    toast.success("Новый расход добавлен");
+  } catch (requestError) {
+    const message = requestError.message || textErrors.addExpenseError;
+    setError(message);
+    toast.error(message);
+    throw requestError;
+  }
+};
+
+ const editExpense = async ({ id, expense }) => {
+  try {
+    await patchExpense({ token, id, expense });
+
+    await getExpenses();
+
+    toast.success("Расход обновлён");
+  } catch (requestError) {
+    const message = requestError.message || textErrors.updateExpenseError;
+    setError(message);
+    toast.error(message);
+    throw requestError;
+  }
+};
+
+const deleteExpenseByID = async ({ id }) => {
+  try {
+    await deleteExpense({ token, id });
+
+    await getExpenses();
+
+    toast.success("Расход удалён");
+  } catch (requestError) {
+    const message = requestError.message || textErrors.deleteExpenseError;
+    setError(message);
+    toast.error(message);
+    throw requestError;
+  }
+};
 
   return (
     <ExpenseContext.Provider
