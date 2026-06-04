@@ -2,20 +2,15 @@ import { categorieName } from "../../const";
 import { Tag } from "./Categories.styled";
 
 function Categories({ onCategorySelect, selectedCategory }) {
-  const isInteractive = typeof onCategorySelect === "function";
-
   return (
     <>
-      {categorieName.map((item) => (
+      {categorieName.map((item, index) => (
         <Tag
-          key={item.id}
-          as={isInteractive ? "button" : "span"}
-          type={isInteractive ? "button" : undefined}
-          onClick={isInteractive ? () => onCategorySelect(item.value) : undefined}
+          key={index}
+          onClick={() => onCategorySelect(item.value)}
           $isSelected={selectedCategory === item.value}
-          $isInteractive={isInteractive}
         >
-          <img src={item.srcIcon.default} alt="" /> {item.name}
+          <img src={item.srcIcon.default} alt="Иконка категории" /> {item.name}
         </Tag>
       ))}
     </>

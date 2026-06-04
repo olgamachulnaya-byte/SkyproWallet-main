@@ -7,7 +7,6 @@ import {
 } from "../../utils/styledUtils";
 
 export const Tag = styled.span`
-  border: none;
   min-height: 30px;
   padding: 8px 20px;
   border-radius: 30px;
@@ -19,7 +18,7 @@ export const Tag = styled.span`
   font-size: ${textSizes.small.fontSize};
   font-weight: ${textSizes.small.fontWeight};
   line-height: 100%;
-  cursor: ${({ $isInteractive }) => ($isInteractive ? "pointer" : "default")};
+  cursor: pointer;
   transition: color 0.2s ease, background-color 0.2s ease;
 
   img {

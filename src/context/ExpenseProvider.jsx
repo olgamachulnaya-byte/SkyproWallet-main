@@ -1,41 +1,30 @@
-import { useCallback, useContext, useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useCallback, useState, useEffect, useContext } from "react";
 import {
-  deleteExpense,
   fetchExpenses,
-  patchExpense,
   postExpense,
+  patchExpense,
+  deleteExpense,
 } from "../services/api";
+import { toast } from "react-toastify";
 import { textErrors } from "../const";
-import { AuthContext } from "./AuthContext";
 import { ExpenseContext } from "./ExpenseContext";
+import {AuthContext} from "../../src/context/AuthContext"
 
 export const ExpenseProvider = ({ children }) => {
-  const { user } = useContext(AuthContext);
-  const token = user?.token;
-
   const [expenses, setExpenses] = useState([]);
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+
+  const {user} = useContext(AuthContext);
+  
+  const token = user.token;
+  // const token = "bgc0b8awbwas6g5g5k5o5s5w606g37w3cc3bo3b83k39s3co3c83c03ck";
 
   const getExpenses = useCallback(async () => {
-    if (!token) {
-      setExpenses([]);
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
     try {
       const data = await fetchExpenses({ token });
-      setExpenses(data);
-    } catch (requestError) {
-      const message = requestError.message || textErrors.getExpenseError;
-      setError(message);
-      toast.error(message);
-    } finally {
-      setIsLoading(false);
+      if (data) setExpenses(data);
+    } catch (error) {
+      setError(error.message);
     }
   }, [token]);
 
@@ -44,61 +33,38 @@ export const ExpenseProvider = ({ children }) => {
   }, [getExpenses]);
 
   const addNewExpense = async ({ expense }) => {
-  try {
-    await postExpense({ token, expense });
+    try {
+      await postExpense({ token, expense });
+      await getExpenses();
+    } catch (error) {
+      console.error(textErrors.addExpenseError, error);
+      toast.error(textErrors.addExpenseError);
+    }
+  };
 
-    await getExpenses();
+  const editExpense = async ({ expense, id }) => {
+    try {
+      await patchExpense({ token, id, expense });
+      await getExpenses();
+    } catch (error) {
+      toast.error(textErrors.updateExpenseError);
+      console.error(textErrors.updateExpenseError, error);
+    }
+  };
 
-    toast.success("Новый расход добавлен");
-  } catch (requestError) {
-    const message = requestError.message || textErrors.addExpenseError;
-    setError(message);
-    toast.error(message);
-    throw requestError;
-  }
-};
-
- const editExpense = async ({ id, expense }) => {
-  try {
-    await patchExpense({ token, id, expense });
-
-    await getExpenses();
-
-    toast.success("Расход обновлён");
-  } catch (requestError) {
-    const message = requestError.message || textErrors.updateExpenseError;
-    setError(message);
-    toast.error(message);
-    throw requestError;
-  }
-};
-
-const deleteExpenseByID = async ({ id }) => {
-  try {
-    await deleteExpense({ token, id });
-
-    await getExpenses();
-
-    toast.success("Расход удалён");
-  } catch (requestError) {
-    const message = requestError.message || textErrors.deleteExpenseError;
-    setError(message);
-    toast.error(message);
-    throw requestError;
-  }
-};
+  const deleteExpenseByID = async ({ id }) => {
+    try {
+      await deleteExpense({ token: token, id });
+      await getExpenses();
+    } catch (error) {
+      toast.error(textErrors.deleteExpenseError);
+      console.error(textErrors.deleteExpenseError, error);
+    }
+  };
 
   return (
     <ExpenseContext.Provider
-      value={{
-        expenses,
-        isLoading,
-        error,
-        getExpenses,
-        addNewExpense,
-        editExpense,
-        deleteExpenseByID,
-      }}
+      value={{ expenses, error, addNewExpense, editExpense, deleteExpenseByID }}
     >
       {children}
     </ExpenseContext.Provider>

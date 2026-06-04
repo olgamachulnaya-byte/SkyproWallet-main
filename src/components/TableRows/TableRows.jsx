@@ -16,17 +16,17 @@ export const TableRow = ({
   amount,
   onEdit,
   onDelete,
-  isSelected = false,
+  isSelected,
 }) => {
-  const handleKeyDown = (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
       onEdit?.();
     }
   };
 
-  const handleDelete = (event) => {
-    event.stopPropagation();
+  const handleDelete = (e) => {
+    e.stopPropagation();
     onDelete?.();
   };
 
@@ -37,19 +37,13 @@ export const TableRow = ({
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      aria-label={`Редактировать расход ${description}`}
     >
       <S.Cell>{description}</S.Cell>
       <S.Cell>{category}</S.Cell>
       <S.Cell>{date}</S.Cell>
       <S.Cell>{amount}</S.Cell>
       <S.Icons>
-        <S.IconButton
-          type="button"
-          $isSelected={isSelected}
-          onClick={handleDelete}
-          aria-label="Удалить расход"
-        >
+        <S.IconButton $isSelected={isSelected} onClick={handleDelete} aria-label="Удалить расход">
           <img src="/first-box/mini-bucket.svg" alt="" />
         </S.IconButton>
       </S.Icons>

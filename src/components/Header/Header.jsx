@@ -70,6 +70,11 @@ export default function Header() {
                         </S.MobileMenuItemLink>
                       </S.MobileHeaderMenuItem>
                       <S.MobileHeaderMenuItem>
+                        <S.MobileMenuItemLink to={RoutesApp.NEW_EXPENSE} onClick={closeMenu}>
+                          Новый расход
+                        </S.MobileMenuItemLink>
+                      </S.MobileHeaderMenuItem>
+                      <S.MobileHeaderMenuItem>
                         <S.MobileMenuItemLink to={RoutesApp.ANALYSIS} onClick={closeMenu}>
                           Анализ расходов
                         </S.MobileMenuItemLink>

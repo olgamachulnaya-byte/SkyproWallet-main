@@ -1,7 +1,17 @@
 import Main from "../../components/Main/Main";
+import { ExpenseProvider } from "../../context/ExpenseProvider";
+
 
 function MainPage() {
-  return <Main />;
+ 
+  return (
+    <div>
+       <ExpenseProvider>
+       <Main  />
+       </ExpenseProvider>
+     
+    </div>
+  );
 }
 
 export default MainPage;

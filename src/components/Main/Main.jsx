@@ -9,17 +9,30 @@ import {
 } from "./Main.styled";
 import { TableRow, TableFirstRow } from "../TableRows/TableRows";
 import ExpenseForm from "../ExpenseForm/ExpenseForm ";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { ExpenseContext } from "../../context/ExpenseContext";
 import { categoryTranslations } from "../../const";
+import { useState } from "react";
 import { formatedDate } from "../../utils/utils";
+import { useEffect } from "react";
+import Filters from "../Fiters/Fiters";
 
 function Main() {
-  const { expenses, isLoading, deleteExpenseByID } = useContext(ExpenseContext);
+  const { expenses, deleteExpenseByID } = useContext(ExpenseContext);
+  const [selectedCategory, setSelectedCategory] = useState(false);
+  const [selectedSorting, setSelectedSorting] = useState(false);
+  const [filteredData, setFilteredData] = useState(expenses);
   const [selectedExpense, setSelectedExpense] = useState(null);
 
+  useEffect(() => {
+    // Обновлять только если ничего не выбрано
+    if (!selectedCategory && !selectedSorting) {
+      setFilteredData(expenses);
+    }
+  }, [expenses, selectedCategory, selectedSorting]);
+
   const handleEditClick = (expenseId) => {
-    setSelectedExpense((currentId) => (currentId === expenseId ? null : expenseId));
+    setSelectedExpense(expenseId);
   };
 
   const handleEditComplete = () => {
@@ -27,56 +40,51 @@ function Main() {
   };
 
   const handleDelete = async (expenseId) => {
-    try {
-      await deleteExpenseByID({ id: expenseId });
-      if (selectedExpense === expenseId) {
-        setSelectedExpense(null);
-      }
-    } catch {
-      // Текст ошибки уже выводится в ExpenseProvider через toast.error.
-    }
+    await deleteExpenseByID({ id: expenseId });
   };
 
   return (
-    <SMain>
-      <SMainHeader>Мои расходы</SMainHeader>
-      <STables>
-        <STableSection>
-          <STableHeader>
-            <SSectionTitle>Таблица расходов</SSectionTitle>
-          </STableHeader>
-          <TableFirstRow />
-          <STableBodyWrapper>
-            {isLoading && <p style={{ padding: "24px 32px" }}>Загрузка расходов...</p>}
-
-            {!isLoading && expenses.length === 0 && (
-              <p style={{ padding: "24px 32px", color: "#999999" }}>
-                Расходов пока нет. Добавьте первый расход через форму справа.
-              </p>
-            )}
-
-            {!isLoading &&
-              expenses.map((expense) => (
+    <>
+      <SMain>
+        <SMainHeader>Мои расходы</SMainHeader>
+        <STables>
+          <STableSection>
+            <STableHeader>
+              <SSectionTitle>Таблица расходов</SSectionTitle>
+              <Filters
+                expenses={expenses}
+                setFilteredData={setFilteredData}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                selectedSorting={selectedSorting}
+                setSelectedSorting={setSelectedSorting}
+              />
+            </STableHeader>
+            <TableFirstRow />
+            <STableBodyWrapper>
+              {filteredData.map((expense) => (
                 <TableRow
                   key={expense._id}
                   description={expense.description}
-                  category={categoryTranslations[expense.category] || expense.category}
+                  category={
+                    categoryTranslations[expense.category] || expense.category
+                  }
                   date={formatedDate(expense.date)}
-                  amount={`${Number(expense.sum || 0).toLocaleString("ru-RU")} ₽`}
+                  amount={`${expense.sum.toLocaleString("ru-RU")} ₽`}
                   onEdit={() => handleEditClick(expense._id)}
                   onDelete={() => handleDelete(expense._id)}
                   isSelected={selectedExpense === expense._id}
                 />
               ))}
-          </STableBodyWrapper>
-        </STableSection>
-
-        <ExpenseForm
-          selectedExpense={selectedExpense}
-          onEditComplete={handleEditComplete}
-        />
-      </STables>
-    </SMain>
+            </STableBodyWrapper>
+          </STableSection>
+          <ExpenseForm
+            selectedExpense={selectedExpense}
+            onEditComplete={handleEditComplete}
+          />
+        </STables>
+      </SMain>
+    </>
   );
 }
 

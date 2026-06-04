@@ -1,45 +1,34 @@
 import axios from "axios";
-import { API_URL, RoutesApp, textErrors } from "../const";
-
-const getAuthErrorMessage = (error) => {
-  return (
-    error.response?.data?.error ||
-    error.response?.data?.message ||
-    error.message ||
-    textErrors.signInAndSignUpError
-  );
-};
-
-const requestConfig = {
-  headers: {
-    "Content-Type": "",
-  },
-};
+import { API_URL, RoutesApp } from "../const";
 
 export async function signIn(userData) {
   try {
-    const response = await axios.post(
-      `${API_URL}${RoutesApp.LOGIN}`,
-      userData,
-      requestConfig
-    );
-
-    return response.data.user;
+    const data = await axios.post(`${API_URL}${RoutesApp.LOGIN}`, userData, {
+      headers: {
+        "Content-Type": "",
+      },
+    });
+    return data.data.user;
   } catch (error) {
-    throw new Error(getAuthErrorMessage(error));
+    throw new Error(error.response.data.error);
   }
 }
 
 export async function signUp({ name, login, password }) {
   try {
-    const response = await axios.post(
+    const data = await axios.post(
       API_URL,
       { login, name, password },
-      requestConfig
-    );
+      {
+        headers: {
+          "Content-Type": "",
+        },
 
-    return response.data.user;
+      }
+    );
+    return data.data.user;
   } catch (error) {
-    throw new Error(getAuthErrorMessage(error));
+    throw new Error(error.response.data.error);
   }
 }
+

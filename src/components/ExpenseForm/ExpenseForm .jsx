@@ -1,18 +1,26 @@
-import { useContext, useEffect } from "react";
-import { toast } from "react-toastify";
 import * as S from "./ExpenseForm .styled";
+import { textErrors } from "../../const";
 import { ModalBlok, Form } from "../AuthForm/AuthForm.styled";
 import Categories from "../Categories/Categories";
-import { ExpenseContext } from "../../context/ExpenseContext";
 import { useForm } from "../../hooks/useForm";
+import { useContext } from "react";
+import { ExpenseContext } from "../../context/ExpenseContext";
+import { toast } from "react-toastify";
 import { validateEmptyFields } from "../../Validators/validateEmptyFields";
 import { validateExpenseErrors } from "../../Validators/expenceValidator";
+import { useEffect } from "react";
 import { formatedDate, formatedInputDate } from "../../utils/utils";
 
 function ExpenseForm({ selectedExpense, onEditComplete }) {
-  const { addNewExpense, editExpense, expenses } = useContext(ExpenseContext);
+  const { addNewExpense, expenses, editExpense } = useContext(ExpenseContext);
 
-  const editingExpense = expenses.find((expense) => expense._id === selectedExpense);
+  const editingExpense = expenses.find(
+    (expense) => expense._id === selectedExpense
+  );
+
+  const handleCategoryChange = (category) => {
+    handleChange({ target: { name: "category", value: category } });
+  };
 
   const {
     formData,
@@ -26,6 +34,7 @@ function ExpenseForm({ selectedExpense, onEditComplete }) {
     setFormData,
   } = useForm({
     initialValues: { name: "", date: "", amount: "", category: "" },
+
     validate: (values) => {
       const requiredFields = ["name", "date", "amount", "category"];
       const { hasEmpty, errors: emptyErrors } = validateEmptyFields(
@@ -46,23 +55,19 @@ function ExpenseForm({ selectedExpense, onEditComplete }) {
   useEffect(() => {
     if (editingExpense) {
       setFormData({
-        name: editingExpense.description || "",
+        name: editingExpense.description,
         date: formatedDate(editingExpense.date),
-        amount: String(editingExpense.sum || ""),
-        category: editingExpense.category || "",
+        amount: editingExpense.sum.toString(),
+        category: editingExpense.category,
       });
     } else {
       resetForm();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedExpense, editingExpense]);
+  }, [selectedExpense]);
 
-  const handleCategoryChange = (category) => {
-    handleChange({ target: { name: "category", value: category } });
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
     if (!validateForm()) {
       return;
@@ -70,32 +75,33 @@ function ExpenseForm({ selectedExpense, onEditComplete }) {
 
     const expense = {
       description: formData.name.trim(),
-      sum: Number(String(formData.amount).replace(",", ".")),
+      sum: parseFloat(formData.amount),
       category: formData.category,
       date: formatedInputDate(formData.date),
     };
-
     try {
       if (selectedExpense) {
         await editExpense({ id: selectedExpense, expense });
+        toast.success("Расход обновлён");
         onEditComplete();
       } else {
         await addNewExpense({ expense });
+        toast.success("Новый расход добавлен");
       }
 
       resetForm();
-    } catch {
-      // Текст ошибки уже выводится в ExpenseProvider через toast.error.
+    } catch (err) {
+      console.error(textErrors.addExpenseError, err.message);
     }
   };
 
   return (
     <ModalBlok>
-      <S.TitleForm>{selectedExpense ? "Редактирование" : "Новый расход"}</S.TitleForm>
+      <S.TitleForm>
+        {selectedExpense ? "Редактирование" : "Новый расход"}
+      </S.TitleForm>
       <Form onSubmit={handleSubmit}>
-        <S.InputTitle>
-          Описание{errors.name && <S.ErrorMark> *</S.ErrorMark>}
-        </S.InputTitle>
+        <S.InputTitle>Описание{errors.name && <S.ErrorMark> *</S.ErrorMark>}</S.InputTitle>
         <S.InputExpenseForm
           name="name"
           placeholder="Введите описание"
@@ -106,12 +112,9 @@ function ExpenseForm({ selectedExpense, onEditComplete }) {
           onBlur={() => handleBlur("name")}
           $isFocused={focus.name}
           $error={errors.name}
-          aria-label="Описание расхода"
         />
 
-        <S.InputTitle>
-          Категория{errors.category && <S.ErrorMark> *</S.ErrorMark>}
-        </S.InputTitle>
+        <S.InputTitle>Категория{errors.category && <S.ErrorMark> *</S.ErrorMark>}</S.InputTitle>
         <S.CategoryTags>
           <Categories
             selectedCategory={formData.category}
@@ -119,43 +122,37 @@ function ExpenseForm({ selectedExpense, onEditComplete }) {
           />
         </S.CategoryTags>
 
-        <S.InputTitle>
-          Дата{errors.date && <S.ErrorMark> *</S.ErrorMark>}
-        </S.InputTitle>
+        <S.InputTitle>Дата{errors.date && <S.ErrorMark> *</S.ErrorMark>}</S.InputTitle>
         <S.InputExpenseForm
           name="date"
-          placeholder="Введите дату"
-          type="text"
+          placeholder="Введите дату "
           value={formData.date}
           onChange={handleChange}
           onFocus={() => handleFocus("date")}
           onBlur={() => handleBlur("date")}
           $isFocused={focus.date}
           $error={errors.date}
-          aria-label="Дата расхода"
         />
 
-        <S.InputTitle>
-          Сумма{errors.amount && <S.ErrorMark> *</S.ErrorMark>}
-        </S.InputTitle>
+        <S.InputTitle>Сумма{errors.amount && <S.ErrorMark> *</S.ErrorMark>}</S.InputTitle>
         <S.InputExpenseForm
           name="amount"
           placeholder="Введите сумму"
-          type="text"
           value={formData.amount}
           onChange={handleChange}
           onFocus={() => handleFocus("amount")}
           onBlur={() => handleBlur("amount")}
           $isFocused={focus.amount}
           $error={errors.amount}
-          aria-label="Сумма расхода"
         />
 
         <S.ExpenseButton
           type="submit"
-          disabled={Object.values(errors).some((error) => error)}
+          disabled={Object.values(errors).some((err) => err)}
         >
-          {selectedExpense ? "Сохранить редактирование" : "Добавить новый расход"}
+          {selectedExpense
+            ? "Сохранить редактирование"
+            : "Добавить новый расход"}
         </S.ExpenseButton>
       </Form>
     </ModalBlok>

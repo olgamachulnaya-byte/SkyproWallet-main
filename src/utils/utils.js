@@ -1,3 +1,5 @@
+import { parseISO, format, parse} from "date-fns";
+
 export function checkLs() {
   try {
     const data = window.localStorage.getItem("userInfo");
@@ -12,18 +14,32 @@ export function checkLs() {
       typeof parsed.token === "string"
     ) {
       return parsed;
+    } else {
+      console.warn("Некорректная структура данных в localStorage");
+      return null;
     }
-
-    console.warn("Некорректная структура данных в localStorage");
-    return null;
   } catch (error) {
     console.error("Ошибка при парсинге localStorage userInfo:", error);
     return null;
   }
 }
 
+export const checkRequiredFields = (formData, requiredFields) => {
+  const errors = {};
+  let isValid = true;
+
+  for (const field of requiredFields) {
+    if (!formData[field]?.trim()) {
+      errors[field] = true;
+      isValid = false;
+    }
+  }
+
+  return { isValid, errors };
+};
+
 export const sortByCategorie = (data) => {
-  const initialData = {
+  let diagramData = {
     food: 0,
     transport: 0,
     housing: 0,
@@ -32,49 +48,30 @@ export const sortByCategorie = (data) => {
     others: 0,
   };
 
-  return data.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = 0;
+  diagramData = data.reduce((index, item) => {
+    if (!index[item.category]) {
+      index[item.category] = 0;
     }
+    index[item.category] += item.sum;
+    return index;
+  }, {});
 
-    acc[item.category] += Number(item.sum) || 0;
-    return acc;
-  }, initialData);
+  return diagramData;
 };
 
 export const formatedDate = (dateString) => {
-  if (!dateString) return "";
-
-  if (/^\d{2}\.\d{2}\.\d{4}$/.test(dateString)) {
-    return dateString;
-  }
-
-  const shortServerDate = String(dateString).match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
-  if (shortServerDate) {
-    const [, month, day, year] = shortServerDate;
-    return `${String(day).padStart(2, "0")}.${String(month).padStart(2, "0")}.${year}`;
-  }
-
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) {
-    return String(dateString);
-  }
-
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-
-  return `${day}.${month}.${year}`;
+  const parsedDate = parseISO(dateString);
+  return format(parsedDate, "dd.MM.yyyy");
 };
 
 export const formatedInputDate = (dateString) => {
-  const [day, month, year] = dateString.split(".");
-  return `${Number(month)}-${Number(day)}-${year}`;
+  const parsed = parse(dateString, "dd.MM.yyyy", new Date());
+  return format(parsed, "M-d-yyyy");
 };
 
 export function truncateString(str) {
   if (str.length > 6) {
-    return `${str.slice(0, 6)}...`;
+    return str.slice(0, 6) + '...';
   }
   return str;
 }

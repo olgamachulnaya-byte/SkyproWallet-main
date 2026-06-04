@@ -1,94 +1,167 @@
+import { useState, useEffect, useCallback, useContext, useMemo } from "react";
 import Diagram from "../Diagram/Diagram";
+import Calendar from "../Calendar/Calendar";
+import CalendarMonth from "../CalendarMonth/CalendarMonth";
 import * as S from "./Analysis.styled";
-
-const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
-
-const mockDiagramData = {
-  food: 4580,
-  transport: 1244,
-  housing: 30000,
-  joy: 2200,
-  education: 7000,
-  others: 1200,
-};
-
-const calendarDays = [
-  "", "", "", "", "", 1, 2,
-  3, 4, 5, 6, 7, 8, 9,
-  10, 11, 12, 13, 14, 15, 16,
-  17, 18, 19, 20, 21, 22, 23,
-  24, 25, 26, 27, 28, 29, 30,
-  31,
-];
+import { sortByCategorie } from "../../utils/utils";
+import { ExpenseContext } from "../../context/ExpenseContext";
 
 function Analysis() {
+  const { expenses } = useContext(ExpenseContext);
+
+  const daysOfWeek = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+  const [filter, setMode] = useState(true);
+  const [period, setPeriod] = useState("все время");
+  const [diagramData, setDiagramData] = useState({});
+  const [isMobile, setIsMobile] = useState(false);
+  const [showCalendarMobile, setShowCalendarMobile] = useState(false);
+  const [isDefaultRangeApplied, setIsDefaultRangeApplied] = useState(false);
+
+  const expenseDates = useMemo(
+    () => expenses.map((item) => new Date(item.date)).filter((date) => !Number.isNaN(date.getTime())),
+    [expenses]
+  );
+
+  const calendarYear = expenseDates.length
+    ? Math.min(...expenseDates.map((date) => date.getFullYear()))
+    : new Date().getFullYear();
+
+  const initialRange = useMemo(() => {
+    if (!expenseDates.length) return undefined;
+
+    const end = new Date(Math.max(...expenseDates.map((date) => date.getTime())));
+    const start = new Date(end);
+    start.setDate(end.getDate() - 6);
+
+    return { from: start, to: end };
+  }, [expenseDates]);
+
+  const formatPeriod = (start, end) => {
+    const options = {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    };
+
+    const startStr = start.toLocaleDateString("ru-RU", options);
+    const endStr = end.toLocaleDateString("ru-RU", options);
+
+    if (start.toDateString() === end.toDateString()) {
+      return startStr;
+    }
+
+    return `${startStr} — ${endStr}`;
+  };
+
+  const handleRangeChange = useCallback(
+    (range) => {
+      if (!range?.start || !range?.end) return;
+
+      const startDate = new Date(range.start);
+      const endDate = new Date(range.end);
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+
+      const filtered = expenses.filter((item) => {
+        const itemDate = new Date(item.date);
+        return itemDate >= startDate && itemDate <= endDate;
+      });
+
+      setPeriod(formatPeriod(startDate, endDate));
+      setDiagramData(sortByCategorie(filtered));
+      setIsDefaultRangeApplied(true);
+    },
+    [expenses]
+  );
+
+  useEffect(() => {
+    if (expenses?.length > 0 && !isDefaultRangeApplied && initialRange) {
+      handleRangeChange({ start: initialRange.from, end: initialRange.to });
+    }
+  }, [expenses, handleRangeChange, initialRange, isDefaultRangeApplied]);
+
+  useEffect(() => {
+    if (!expenses?.length) {
+      setDiagramData(sortByCategorie([]));
+    }
+  }, [expenses]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 474);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <S.Analysis>
       <S.AnalysisHeader>Анализ расходов</S.AnalysisHeader>
       <S.AnalysisExspenseContainer>
-        <S.AnalysisCalendarContainer>
-          <S.CalendarHeaderContainer>
-            <S.CalendarHeader>
-              <S.CalendarHeaderTitle>Период</S.CalendarHeaderTitle>
-            </S.CalendarHeader>
-            
-            <S.CalendarWeekDays>
-              {daysOfWeek.map((day) => (
-                <S.CalendarWeekDayBlock key={day}>
-                  <S.CalendarWeekDay>{day.toLowerCase()}</S.CalendarWeekDay>
-                </S.CalendarWeekDayBlock>
-              ))}
-            </S.CalendarWeekDays>
-          </S.CalendarHeaderContainer>
-
-          <S.CalendarBody>
-            <div style={{ paddingRight: 32 }}>
-              <p
-                style={{
-                  margin: "0 0 16px",
-                  color: "#000000",
-                  fontSize: 16,
-                  fontWeight: 600,
-                  lineHeight: "100%",
-                }}
-              >
-                Март 2026
-              </p>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(7, 40px)",
-                  gap: "6px 5px",
-                }}
-              >
-                {calendarDays.map((day, index) => (
-                  <span
-                    key={`${day}-${index}`}
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      background: day ? "#F4F5F6" : "transparent",
-                      color: day === 12 || day === 13 ? "#7334EA" : "#000000",
-                      fontSize: 12,
-                      fontWeight: day === 12 || day === 13 ? 600 : 400,
-                    }}
+        {(!isMobile || showCalendarMobile) && (
+          <S.AnalysisCalendarContainer>
+            <S.CalendarHeaderContainer>
+              <S.CalendarHeader>
+                <S.CalendarHeaderTitle>Период</S.CalendarHeaderTitle>
+                <S.CalendarFilterLinks>
+                  <S.CalendarNavLink
+                    type="button"
+                    $active={filter}
+                    onClick={() => setMode(true)}
                   >
-                    {day}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </S.CalendarBody>
-        </S.AnalysisCalendarContainer>
+                    День
+                  </S.CalendarNavLink>
+                  <S.CalendarNavLink
+                    type="button"
+                    $active={!filter}
+                    onClick={() => setMode(false)}
+                  >
+                    Месяц
+                  </S.CalendarNavLink>
+                </S.CalendarFilterLinks>
+              </S.CalendarHeader>
+              {filter && (
+                <S.CalendarWeekDays>
+                  {daysOfWeek.map((day) => (
+                    <S.CalendarWeekDayBlock key={day}>
+                      <S.CalendarWeekDay>{day.toLowerCase()}</S.CalendarWeekDay>
+                    </S.CalendarWeekDayBlock>
+                  ))}
+                </S.CalendarWeekDays>
+              )}
+            </S.CalendarHeaderContainer>
 
-        <S.AnalysisTableContainer>
-          <Diagram diagramData={mockDiagramData} period="март 2026" />
-        </S.AnalysisTableContainer>
+            <S.CalendarBody>
+              {filter ? (
+                <Calendar
+                  onRangeChange={handleRangeChange}
+                  initialRange={initialRange}
+                  calendarYear={calendarYear}
+                />
+              ) : (
+                <CalendarMonth onRangeChange={handleRangeChange} calendarYear={calendarYear} />
+              )}
+            </S.CalendarBody>
+          </S.AnalysisCalendarContainer>
+        )}
+
+        {(!isMobile || !showCalendarMobile) && (
+          <S.AnalysisTableContainer>
+            <Diagram diagramData={diagramData} period={period} />
+          </S.AnalysisTableContainer>
+        )}
       </S.AnalysisExspenseContainer>
+
+      {isMobile && (
+        <S.PeriodButtonBlock>
+          <S.PeriodButton type="button" onClick={() => setShowCalendarMobile((prev) => !prev)}>
+            {showCalendarMobile ? "Выбрать период" : "Выбрать другой период"}
+          </S.PeriodButton>
+        </S.PeriodButtonBlock>
+      )}
     </S.Analysis>
   );
 }

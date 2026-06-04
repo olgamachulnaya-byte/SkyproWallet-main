@@ -41,6 +41,10 @@ export const Row = styled.div`
   cursor: pointer;
   outline: none;
 
+  &:focus-visible {
+    background: #F1EBFD;
+  }
+
   @media (max-width: 760px) {
     grid-template-columns: 1.2fr 1fr 0.9fr 0.9fr 24px;
     column-gap: 14px;
@@ -73,6 +77,10 @@ export const IconButton = styled.button`
     $isSelected
       ? "brightness(0) saturate(100%) invert(27%) sepia(88%) saturate(3021%) hue-rotate(252deg) brightness(95%) contrast(95%)"
       : "none"};
+
+  &:hover {
+    opacity: 1;
+  }
 
   img {
     width: 12px;
