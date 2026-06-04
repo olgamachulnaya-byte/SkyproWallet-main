@@ -9,9 +9,36 @@ export const TableFirstRow = () => (
   </S.RowHeader>
 );
 
-export const TableRow = ({ description, category, date, amount, isSelected = false }) => {
+export const TableRow = ({
+  description,
+  category,
+  date,
+  amount,
+  onEdit,
+  onDelete,
+  isSelected = false,
+}) => {
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onEdit?.();
+    }
+  };
+
+  const handleDelete = (event) => {
+    event.stopPropagation();
+    onDelete?.();
+  };
+
   return (
-    <S.Row $isSelected={isSelected}>
+    <S.Row
+      $isSelected={isSelected}
+      onClick={onEdit}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`Редактировать расход ${description}`}
+    >
       <S.Cell>{description}</S.Cell>
       <S.Cell>{category}</S.Cell>
       <S.Cell>{date}</S.Cell>
@@ -20,8 +47,8 @@ export const TableRow = ({ description, category, date, amount, isSelected = fal
         <S.IconButton
           type="button"
           $isSelected={isSelected}
-          disabled
-          aria-label="Удаление будет подключено позже"
+          onClick={handleDelete}
+          aria-label="Удалить расход"
         >
           <img src="/first-box/mini-bucket.svg" alt="" />
         </S.IconButton>
